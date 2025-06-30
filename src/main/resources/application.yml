@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: spring-auth-board
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/auth-board
+    username: postgres
+    password: pass1234
+
+  jpa:
+    show-sql: true
+
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        highlight_sql: true
+    hibernate:
+      ddl-auto: validate
+
+  cache:
+    type: redis
+  redis:
+    host: localhost
+    port: 6379
+
+jwt:
+  secret: SpringBootJWTHelperTokenSecretKeyValue123!@#
+  accessTokenPlusHour: 1
+  refreshTokenPlusHour: 12
+
+swagger:
+  title: Spring Auth Board API
+  version: 1.0.0
+  description: Spring Security, JWT, Redis를 사용한 게시판

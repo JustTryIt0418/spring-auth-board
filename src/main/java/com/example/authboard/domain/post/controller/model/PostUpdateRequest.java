@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 public class PostUpdateRequest {
 
     @NotNull
-    private Long id;
+    private Long postId;
 
     @NotBlank
     private String title;

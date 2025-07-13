@@ -10,9 +10,14 @@ import com.example.authboard.domain.comment.controller.model.CommentUpdateReques
 import com.example.authboard.domain.comment.db.CommentEntity;
 import com.example.authboard.domain.comment.db.enums.CommentStatus;
 import com.example.authboard.domain.comment.service.CommentService;
+import com.example.authboard.domain.post.db.PostEntity;
 import com.example.authboard.domain.post.service.PostService;
+import com.example.authboard.domain.user.db.UserEntity;
 import com.example.authboard.security.UserContext;
+import com.example.authboard.security.model.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
+
+import java.util.Objects;
 
 @Business
 @RequiredArgsConstructor
@@ -23,44 +28,40 @@ public class CommentBusiness {
     private final ObjectConverter converter;
     private final UserContext userContext;
 
-    public CommentResponse createComment(CommentRequest request) {
+    public CommentResponse createComment(CommentRequest request, CustomUserDetails userDetails) {
 
-        postService.getPostByIdWithThrow(request.getPostId());
-
-        Long userId = userContext.getCurrentUser().getUserEntity().getId();
+        PostEntity post = postService.getPostByIdWithThrow(request.getPostId());
+        UserEntity user = converter.toObject(userDetails, UserEntity.class);
 
         CommentEntity commentEntity = converter.toObject(request, CommentEntity.class);
-        commentEntity.setUserId(userId);
+        commentEntity.setUser(user);
+        commentEntity.setPost(post);
         commentEntity.setStatus(CommentStatus.ACTIVE);
 
         return converter.toObject(commentService.saveComment(commentEntity), CommentResponse.class);
     }
 
-    public CommentResponse updateComment(CommentUpdateRequest request) {
-        Long userId = userContext.getCurrentUser().getUserEntity().getId();
-
-        CommentEntity comment = commentService.getCommentWithThrow(request.getId());
-
-        if (!comment.getUserId().equals(userId)) {
-            throw new ApiException(CommentErrorCode.COMMENT_NOT_AUTHORIZED);
-        }
-
+    public CommentResponse updateComment(CommentUpdateRequest request, CustomUserDetails userDetails) {
+        CommentEntity comment = getAuthorizedComment(request.getCommentId(), userDetails);
         comment.setContent(request.getContent());
 
         return converter.toObject(commentService.saveComment(comment), CommentResponse.class);
     }
 
-    public CommentResponse deleteComment(Long commentId) {
-        Long userId = userContext.getCurrentUser().getUserEntity().getId();
-
-        CommentEntity comment = commentService.getCommentWithThrow(commentId);
-
-        if (!comment.getUserId().equals(userId)) {
-            throw new ApiException(CommentErrorCode.COMMENT_NOT_AUTHORIZED);
-        }
-
+    public CommentResponse deleteComment(Long commentId, CustomUserDetails userDetails) {
+        CommentEntity comment = getAuthorizedComment(commentId, userDetails);
         comment.setStatus(CommentStatus.DELETED);
 
         return converter.toObject(commentService.saveComment(comment), CommentResponse.class);
+    }
+
+    private CommentEntity getAuthorizedComment(Long commentId, CustomUserDetails userDetails) {
+        CommentEntity comment = commentService.getCommentWithThrow(commentId);
+
+        if (!Objects.equals(comment.getUser().getId(), userDetails.getId())) {
+            throw new ApiException(CommentErrorCode.COMMENT_NOT_AUTHORIZED);
+        }
+
+        return comment;
     }
 }

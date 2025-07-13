@@ -18,7 +18,6 @@ import com.example.authboard.domain.user.db.UserEntity;
 import com.example.authboard.domain.user.db.enums.UserStatus;
 import com.example.authboard.domain.user.service.UserService;
 import com.example.authboard.security.UserContext;
-import com.example.authboard.security.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 

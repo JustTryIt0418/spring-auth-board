@@ -23,13 +23,13 @@ public class ApiResponse<T> {
 
     private String description;
 
-    private LocalDateTime timestamp;
+    private OffsetDateTime timestamp;
 
     public static <T> ApiResponse<T>  ok(T data) {
         return ApiResponse.<T>builder()
                 .success(true)
                 .data(data)
-                .timestamp(LocalDateTime.now())
+                .timestamp(OffsetDateTime.now())
                 .build();
     }
 
@@ -38,7 +38,7 @@ public class ApiResponse<T> {
                 .success(false)
                 .code(errorCodeIfs.getCode())
                 .description(errorCodeIfs.getDescription())
-                .timestamp(LocalDateTime.now())
+                .timestamp(OffsetDateTime.now())
                 .build();
     }
 
@@ -47,7 +47,7 @@ public class ApiResponse<T> {
                 .success(false)
                 .code(errorCodeIfs.getCode())
                 .description(description)
-                .timestamp(LocalDateTime.now())
+                .timestamp(OffsetDateTime.now())
                 .build();
     }
 }

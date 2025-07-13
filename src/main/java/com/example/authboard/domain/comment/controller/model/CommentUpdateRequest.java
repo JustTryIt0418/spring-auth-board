@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 public class CommentUpdateRequest {
 
     @NotNull
-    private Long id;
+    private Long commentId;
 
     @NotBlank
     private String content;

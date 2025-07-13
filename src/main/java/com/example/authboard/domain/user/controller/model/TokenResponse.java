@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Data
 @AllArgsConstructor
@@ -15,9 +16,9 @@ public class TokenResponse {
 
     private String accessToken;
 
-    private LocalDateTime accessTokenExpiredAt;
+    private OffsetDateTime accessTokenExpiredAt;
 
     private String refreshToken;
 
-    private LocalDateTime refreshTokenExpiredAt;
+    private OffsetDateTime refreshTokenExpiredAt;
 }

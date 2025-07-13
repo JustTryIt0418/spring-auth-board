@@ -1,5 +1,7 @@
 package com.example.authboard.domain.user.db;
 
+import com.example.authboard.domain.comment.db.CommentEntity;
+import com.example.authboard.domain.post.db.PostEntity;
 import com.example.authboard.domain.user.db.enums.UserRole;
 import com.example.authboard.domain.user.db.enums.UserStatus;
 import jakarta.persistence.Column;
@@ -9,7 +11,9 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,6 +23,9 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -51,12 +58,12 @@ public class UserEntity implements Serializable {
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false, columnDefinition = "timestamptz")
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     @UpdateTimestamp
     @Column(name = "updated_at", columnDefinition = "timestamptz")
-    private LocalDateTime updatedAt;
+    private OffsetDateTime updatedAt;
 
     @Column(name = "last_login_at", columnDefinition = "timestamptz")
-    private LocalDateTime lastLoginAt;
+    private OffsetDateTime lastLoginAt;
 }

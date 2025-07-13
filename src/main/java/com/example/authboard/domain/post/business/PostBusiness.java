@@ -14,7 +14,9 @@ import com.example.authboard.domain.post.controller.model.PostUpdateRequest;
 import com.example.authboard.domain.post.db.PostEntity;
 import com.example.authboard.domain.post.db.enums.PostStatus;
 import com.example.authboard.domain.post.service.PostService;
+import com.example.authboard.domain.user.db.UserEntity;
 import com.example.authboard.security.UserContext;
+import com.example.authboard.security.model.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 
@@ -31,17 +33,14 @@ public class PostBusiness {
     private final ObjectConverter converter;
     private final UserContext userContext;
 
-    public PostResponse createPost(PostRequest postRequest) {
-        Long userId = userContext.getCurrentUser().getUserEntity().getId();
+    public PostResponse createPost(PostRequest postRequest, CustomUserDetails userDetails) {
+        UserEntity user = converter.toObject(userDetails, UserEntity.class);
 
-        PostEntity postEntity = converter.toObject(postRequest, PostEntity.class);
-        postEntity.setStatus(PostStatus.ACTIVE);
-        postEntity.setUserId(userId);
+        PostEntity post = converter.toObject(postRequest, PostEntity.class);
+        post.setStatus(PostStatus.ACTIVE);
+        post.setUser(user);
 
-        return converter.toObject(
-                postService.savePost(postEntity),
-                PostResponse.class
-        );
+        return converter.toObject(postService.savePost(post), PostResponse.class);
     }
 
     public PageDto<PostResponse> getPostList(
@@ -52,48 +51,41 @@ public class PostBusiness {
     }
 
     public PostResponse getPost(Long postId) {
-
         PostResponse post = converter.toObject(postService.getPostByIdWithThrow(postId), PostResponse.class);
 
-        List<CommentResponse> comments = converter.toList(commentService.getCommentListByPostId(postId), CommentResponse.class);
+        List<PostResponse.SimpleCommentResponse> comments =
+                converter.toList(
+                        commentService.getCommentListByPostId(postId),
+                        PostResponse.SimpleCommentResponse.class
+                );
 
         post.setComments(comments);
 
         return post;
     }
 
-    public PostResponse updatePost(PostUpdateRequest postRequest) {
-        Long userId = userContext.getCurrentUser().getUserEntity().getId();
-
-        PostEntity post = postService.getPostByIdWithThrow(postRequest.getId());
-
-        if (!Objects.equals(post.getUserId(), userId)) {
-            throw new ApiException(PostErrorCode.POST_NOT_AUTHORIZED);
-        }
-
+    public PostResponse updatePost(PostUpdateRequest postRequest, CustomUserDetails userDetails) {
+        PostEntity post = getAuthorizedPost(postRequest.getPostId(), userDetails);
         post.setTitle(postRequest.getTitle());
         post.setContent(postRequest.getContent());
 
-        return converter.toObject(
-                postService.savePost(post),
-                PostResponse.class
-        );
+        return converter.toObject(postService.savePost(post), PostResponse.class);
     }
 
-    public PostResponse deletePost(Long postId) {
-        Long userId = userContext.getCurrentUser().getUserEntity().getId();
+    public PostResponse deletePost(Long postId, CustomUserDetails userDetails) {
+        PostEntity post = getAuthorizedPost(postId, userDetails);
+        post.setStatus(PostStatus.DELETED);
 
+        return converter.toObject(postService.savePost(post), PostResponse.class);
+    }
+
+    private PostEntity getAuthorizedPost(Long postId, CustomUserDetails userDetails) {
         PostEntity post = postService.getPostByIdWithThrow(postId);
 
-        if (!Objects.equals(post.getUserId(), userId)) {
+        if (!Objects.equals(post.getUser().getId(), userDetails.getId())) {
             throw new ApiException(PostErrorCode.POST_NOT_AUTHORIZED);
         }
 
-        post.setStatus(PostStatus.DELETED);
-
-        return converter.toObject(
-                postService.savePost(post),
-                PostResponse.class
-        );
+        return post;
     }
 }

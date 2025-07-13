@@ -7,6 +7,7 @@ import com.example.authboard.domain.user.db.UserEntity;
 import com.example.authboard.domain.user.db.UserRepository;
 import com.example.authboard.domain.user.db.enums.UserStatus;
 import com.example.authboard.domain.user.service.UserService;
+import com.example.authboard.security.model.CustomUserDetails;
 import com.example.authboard.security.model.TokenDto;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -23,10 +24,12 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Base64;
 import java.util.Collection;
@@ -43,6 +46,7 @@ public class JwtTokenProvider {
 
     private final JwtProperties jwtProperties;
     private final RedisTemplate<String, String> redisTemplate;
+    private final UserDetailsService userDetailsService;
 
     private SecretKey secretKey;
 
@@ -53,10 +57,10 @@ public class JwtTokenProvider {
     }
 
     public TokenDto createToken(String email, List<String> role, long expireTime) {
-        LocalDateTime expiredLocalDateTime = LocalDateTime.now().plusHours(expireTime);
+        OffsetDateTime expiredLocalDateTime = OffsetDateTime.now().plusHours(expireTime);
 
         Date expiredAt = Date.from(
-                expiredLocalDateTime.atZone(ZoneId.systemDefault())
+                expiredLocalDateTime
                         .toInstant()
         );
 
@@ -114,8 +118,10 @@ public class JwtTokenProvider {
                 .map(SimpleGrantedAuthority::new)
                 .toList();
 
+        CustomUserDetails userDetails = (CustomUserDetails) userDetailsService.loadUserByUsername(email);
+
         return new UsernamePasswordAuthenticationToken(
-                email,
+                userDetails,
                 null,
                 authorities
         );

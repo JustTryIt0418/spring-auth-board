@@ -16,8 +16,8 @@ import com.example.authboard.domain.user.service.UserService;
 import com.example.authboard.security.JwtTokenProvider;
 import com.example.authboard.domain.user.controller.model.TokenResponse;
 import com.example.authboard.security.UserContext;
+import com.example.authboard.security.model.CustomUserDetails;
 import com.example.authboard.security.model.TokenDto;
-import com.example.authboard.security.model.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -36,7 +36,6 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class UserBusiness {
 
-    private final UserContext userContext;
     private final UserService userService;
     private final ObjectConverter converter;
     private final AuthenticationManager authenticationManager;
@@ -68,8 +67,8 @@ public class UserBusiness {
         String email = authentication.getName();
 
         TokenResponse token = generateTokens(email, roles);
-        User user = (User) authentication.getPrincipal();
-        UserResponse userResponse = converter.toObject(user.getUserEntity(), UserResponse.class);
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        UserResponse userResponse = converter.toObject(userDetails, UserResponse.class);
 
         return LoginResponse.builder()
                 .user(userResponse)
@@ -77,8 +76,8 @@ public class UserBusiness {
                 .build();
     }
 
-    public UserResponse getMyInfo() {
-        return converter.toObject(userContext.getCurrentUser().getUserEntity(), UserResponse.class);
+    public UserResponse getMyInfo(CustomUserDetails userDetails) {
+        return converter.toObject(userDetails, UserResponse.class);
     }
 
     public TokenResponse reissue(TokenRefreshRequest request) {
@@ -96,9 +95,8 @@ public class UserBusiness {
         return generateTokens(email, roles);
     }
 
-    public Void logout() {
-        User user = userContext.getCurrentUser();
-        String email = user.getUserEntity().getEmail();
+    public Void logout(CustomUserDetails userDetails) {
+        String email = userDetails.getEmail();
 
         String accessToken = redisTemplate.opsForValue().get("accessToken:" + email);
         Long remainingTime = jwtTokenProvider.getTokenRemainingTime(accessToken);

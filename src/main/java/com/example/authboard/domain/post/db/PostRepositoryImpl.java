@@ -3,6 +3,7 @@ package com.example.authboard.domain.post.db;
 import com.example.authboard.domain.post.controller.model.PostListRequest;
 import com.example.authboard.domain.post.controller.model.PostResponse;
 import com.example.authboard.domain.post.db.enums.PostStatus;
+import com.example.authboard.domain.user.db.QUserEntity;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
@@ -20,7 +21,9 @@ import java.util.Optional;
 public class PostRepositoryImpl implements PostRepositoryCustom {
 
     private final JPAQueryFactory jpaQueryFactory;
+
     QPostEntity post = QPostEntity.postEntity;
+    QUserEntity user = QUserEntity.userEntity;
 
     @Override
     public Page<PostResponse> findAllPosts(PostListRequest request, Pageable pageable) {
@@ -43,10 +46,15 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
                                 post.content,
                                 post.createdAt,
                                 post.updatedAt,
-                                post.userId,
+                                Projections.fields(PostResponse.SimpleUserResponse.class,
+                                        user.id,
+                                        user.email,
+                                        user.nickname
+                                ).as("user"),
                                 post.status
                         ))
                         .from(post)
+                        .leftJoin(post.user, user)
                         .where(whereCondition)
                         .orderBy(orderSpecifier)
                         .offset(pageable.getOffset())

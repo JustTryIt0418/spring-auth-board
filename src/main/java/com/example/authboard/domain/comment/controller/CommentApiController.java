@@ -5,10 +5,12 @@ import com.example.authboard.domain.comment.business.CommentBusiness;
 import com.example.authboard.domain.comment.controller.model.CommentRequest;
 import com.example.authboard.domain.comment.controller.model.CommentResponse;
 import com.example.authboard.domain.comment.controller.model.CommentUpdateRequest;
+import com.example.authboard.security.model.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,25 +31,28 @@ public class CommentApiController {
     @PostMapping("")
     public ApiResponse<CommentResponse> createComment(
             @Valid
-            @RequestBody CommentRequest request
+            @RequestBody CommentRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-            return ApiResponse.ok(commentBusiness.createComment(request));
+            return ApiResponse.ok(commentBusiness.createComment(request, userDetails));
     }
 
     @Operation(summary = "댓글 수정", description = "댓글 ID, 댓글 내용을 입력받아 댓글을 수정합니다.")
     @PutMapping("")
     public ApiResponse<CommentResponse> updateComment(
             @Valid
-            @RequestBody CommentUpdateRequest request
+            @RequestBody CommentUpdateRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        return ApiResponse.ok(commentBusiness.updateComment(request));
+        return ApiResponse.ok(commentBusiness.updateComment(request, userDetails));
     }
 
     @Operation(summary = "댓글 삭제", description = "댓글 ID를 입력받아 댓글을 삭제합니다.")
     @DeleteMapping("/{commentId}")
     public ApiResponse<CommentResponse> deleteComment(
-            @PathVariable("commentId") Long commentId
+            @PathVariable("commentId") Long commentId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        return ApiResponse.ok(commentBusiness.deleteComment(commentId));
+        return ApiResponse.ok(commentBusiness.deleteComment(commentId, userDetails));
     }
 }

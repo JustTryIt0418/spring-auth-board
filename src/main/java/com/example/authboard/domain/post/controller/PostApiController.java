@@ -7,6 +7,7 @@ import com.example.authboard.domain.post.controller.model.PostListRequest;
 import com.example.authboard.domain.post.controller.model.PostRequest;
 import com.example.authboard.domain.post.controller.model.PostResponse;
 import com.example.authboard.domain.post.controller.model.PostUpdateRequest;
+import com.example.authboard.security.model.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -15,6 +16,7 @@ import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,43 +38,28 @@ public class PostApiController {
     @PostMapping("")
     public ApiResponse<PostResponse> createPost(
             @Valid
-            @RequestBody PostRequest postRequest
+            @RequestBody PostRequest postRequest,
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        return ApiResponse.ok(postBusiness.createPost(postRequest));
-    }
-
-    @Operation(summary = "게시글 조회", description = "게시글 ID를 입력받아 게시글을 조회합니다.")
-    @GetMapping("/{postId}")
-    public ApiResponse<PostResponse> getPost(
-            @PathVariable("postId") Long postId
-    ) {
-        return ApiResponse.ok(postBusiness.getPost(postId));
-    }
-
-    @Operation(summary = "게시글 목록 조회", description = "게시글 검색타입, 검색어, 페이지 등을 받아 게시글 목록을 조회합니다.")
-    @GetMapping("")
-    public ApiResponse<PageDto<PostResponse>> getPostList(
-            @ParameterObject PostListRequest request,
-            @ParameterObject
-            @PageableDefault(size = 10, page = 0, sort = "id", direction = Sort.Direction.DESC) Pageable pageable
-    ) {
-        return ApiResponse.ok(postBusiness.getPostList(request, pageable));
+        return ApiResponse.ok(postBusiness.createPost(postRequest, userDetails));
     }
 
     @Operation(summary = "게시글 수정", description = "게시글 제목, 내용을 입력받아 게시글을 수정합니다.")
     @PutMapping("")
     public ApiResponse<PostResponse> updatePost (
             @Valid
-            @RequestBody PostUpdateRequest request
+            @RequestBody PostUpdateRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        return ApiResponse.ok(postBusiness.updatePost(request));
+        return ApiResponse.ok(postBusiness.updatePost(request, userDetails));
     }
 
     @Operation(summary = "게시글 삭제", description = "게시글 ID를 입력받아 게시글을 삭제합니다.")
     @DeleteMapping("/{postId}")
     public ApiResponse<PostResponse> deletePost (
-            @PathVariable("postId") Long postId
+            @PathVariable("postId") Long postId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        return ApiResponse.ok(postBusiness.deletePost(postId));
+        return ApiResponse.ok(postBusiness.deletePost(postId, userDetails));
     }
 }
